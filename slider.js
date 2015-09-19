@@ -173,244 +173,243 @@
             });
           }
         },
-handleEvent : function(e){
-                switch(e.type){
-                  case 'touchstart':
-                    this.start(e);break;
-                  case 'touchmove':
-                    this.move(e);break;
-                  case 'touchend':
-                  case 'touchcancel':
-                    this.end(e);break;
-                  case 'webkitTransitionEnd':
-                  case 'msTransitionEnd':
-                  case 'oTransitionEnd':
-                  case 'transitionend': 
-                    this.transitionEnd(e); break;
-                }
-              },
-loadImg : function(n){  //判断加载哪屏图片
-            n = n || 0;
-            //不考虑循环时候复制的元素
-            if(n < this._minpage) n = this._maxpage;
-            else if(n > this._maxpage) n = this._minpage;
+        handleEvent : function(e){
+          switch(e.type){
+            case 'touchstart':
+              this.start(e);break;
+            case 'touchmove':
+              this.move(e);break;
+            case 'touchend':
+            case 'touchcancel':
+              this.end(e);break;
+            case 'webkitTransitionEnd':
+            case 'msTransitionEnd':
+            case 'oTransitionEnd':
+            case 'transitionend': 
+              this.transitionEnd(e); break;
+          }
+        },
+        loadImg : function(n) {  //判断加载哪屏图片
+          n = n || 0;
+          //不考虑循环时候复制的元素
+          if(n < this._minpage) n = this._maxpage;
+          else if(n > this._maxpage) n = this._minpage;
 
-            var status = this.visible,
-                lazyIndex = this.lazyIndex - 1,
-                maxIndex = lazyIndex + n;
-            if(maxIndex > this._maxpage) return;
-            maxIndex += 1;  //补上,for里判断没有=
-            var start = (n && (lazyIndex + n) || n) * status,
-                end = maxIndex * status,
-                panels = this.panels;
-            end = Math.min(panels.length,end);
-            for(var i = start;i < end;i++){
-              this.getImg(panels[i]);
+          var status = this.visible,
+              lazyIndex = this.lazyIndex - 1,
+              maxIndex = lazyIndex + n;
+          if(maxIndex > this._maxpage) return;
+          maxIndex += 1;  //补上,for里判断没有=
+          var start = (n && (lazyIndex + n) || n) * status,
+              end = maxIndex * status,
+              panels = this.panels;
+          end = Math.min(panels.length,end);
+          for(var i = start;i < end;i++){
+            this.getImg(panels[i]);
+          }
+        },
+        getImg : function(obj){  //加载图片
+          if(!obj) return;
+          obj = $(obj);
+          if(obj.attr('l')){return;}  //已加载
+          var that = this,
+              lazy = that.lazy,
+              cls = 'img' + lazy;
+              lazy = lazy.replace(/^\.|#/g,'');
+          obj.find(cls).each(function(n,item){
+            var nobj = $(item);
+            src = nobj.attr('dataimg');
+            if(src){
+              nobj.attr('src',src).removeAttr('dataimg').removeClass(lazy);
             }
-          },
-getImg : function(obj){  //加载图片
-           if(!obj) return;
-           obj = $(obj);
-           if(obj.attr('l')){return;}  //已加载
-           var that = this,
-               lazy = that.lazy,
-               cls = 'img' + lazy;
-           lazy = lazy.replace(/^\.|#/g,'');
-           obj.find(cls).each(function(n,item){
-               var nobj = $(item);
-               src = nobj.attr('dataimg');
-               if(src){
-               nobj.attr('src',src).removeAttr('dataimg').removeClass(lazy);
-               }
-               });
-           obj.attr('l','1');
-         },
-start : function(e){  //触摸开始
+          });
+          obj.attr('l','1');
+        },
+        start : function(e){  //触摸开始
           var et = e.touches[0];
           //if(this._isScroll){return;}  //滑动未停止，则返回
           this._movestart = undefined;
           this._disX = 0;
           this._coord = {
-x : et.pageX , 
-    y : et.pageY
+            x : et.pageX , 
+            y : et.pageY
           };
         },
-move : function(e){
-         if(e.touches.length > 1 || e.scale && e.scale !== 1) return;
-         var et = e.touches[0],
+        move : function(e){
+          if(e.touches.length > 1 || e.scale && e.scale !== 1) return;
+          var et = e.touches[0],
              disX = this._disX = et.pageX - this._coord.x,
              initLeft = this.left,
              tmleft;
-         if(typeof this._movestart == 'undefined'){  //第一次执行touchmove
-           this._movestart = !!(this._movestart || Math.abs(disX) < Math.abs(et.pageY - this._coord.y));
-         }
-         if(!this._movestart){ //不是上下
-           e.preventDefault();
-           this.stop();
-           if(!this.loop){  //不循环
-             disX = disX / ( (!this.curIndex && disX > 0 || this.curIndex == this._maxpage && disX < 0 ) ? ( Math.abs(disX) / this.steps + 1 ) : 1 );  //增加阻力
-           }
-           tmleft = initLeft - this.curIndex * this.steps + disX;
-           this.setCoord(this.panel , tmleft);
-           this._disX = disX;
-           //this._left = tmleft;
-         }
-       },
-end : function(e){
-        if(!this._movestart){  //如果执行了move
-          var distance = this._disX;
-          if(distance < -10){
-            e.preventDefault();
-            this.forward();
-          }else if(distance > 10){
-            e.preventDefault();
-            this.backward();
+          if(typeof this._movestart == 'undefined'){  //第一次执行touchmove
+            this._movestart = !!(this._movestart || Math.abs(disX) < Math.abs(et.pageY - this._coord.y));
           }
-          distance = null;
-        }
-      },
-backward : function(e){
-             if(e&&e.preventDefault){e.preventDefault()}
-             var cur = this.curIndex,
-                 minp = this._minpage;
-             cur -= 1;
-             if(cur < minp){
-               if(!this.loop){cur = minp;}
-               else{cur = minp - 1;}
-             }
-             this.slideTo(cur);
-             this.callback && this.callback(Math.max(cur,minp),-1);
-           },
-forward : function(e){
-            if(e&&e.preventDefault){e.preventDefault()}
-            var cur = this.curIndex,
-                maxp = this._maxpage;
-            cur += 1;
-            if(cur > maxp){
-              if(!this.loop){cur = maxp;}
-              else{cur = maxp + 1;}
+          if(!this._movestart){ //不是上下
+            e.preventDefault();
+            this.stop();
+            if(!this.loop){  //不循环
+              disX = disX / ( (!this.curIndex && disX > 0 || this.curIndex == this._maxpage && disX < 0 ) ? ( Math.abs(disX) / this.steps + 1 ) : 1 );  //增加阻力
             }
-            this.slideTo(cur);
-            this.callback && this.callback(Math.min(cur,maxp),1);
-          },
-setCoord : function(obj,x){
-             var transformValue = gv1 + x + 'px,0' + gv2;
-             this.useTransform && obj.css({"-webkit-transform": transformValue, "-moz-transform": transformValue, "transform": transformValue}) || obj.css("left",x);
-           },
-slideTo : function(cur,duration){
-            cur = cur || 0;
-            this.curIndex = cur;  //保存当前屏数
-            var panel = this.panel,
-                style = panel[0].style,
-                scrollx = this.left - cur * this.steps;
-            style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = (duration || this.duration) + 'ms';
-            this.setCoord(panel,scrollx);
-            this.loadImg(cur);
-          },
-transitionEnd : function(){
-                  var panel = this.panel,
-                  style = panel[0].style,
-                  loop = this.loop,
-                  cur = this.curIndex;
-                  if(loop){  //把curIndex和坐标重置
-                    if(cur > this._maxpage){
-                      this.curIndex = 0;
-                    }else if(cur < this._minpage){
-                      this.curIndex = this._maxpage;
-                    }
-                    this.setCoord(panel,this.left - this.curIndex * this.steps);
-                  }
-                  if(!loop && cur == this._maxpage){  //不循环的，只播放一次
-                    this.stop();
-                    this.play = false;
-                  }
-                  else{
-                    this.begin();
-                  }
-                  this.update();
-                  this.updateArrow();
-                  style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = 0;
-                  //this._isScroll = false;
-                },
-update : function(){
-           var triggers = this.triggers,
-           cls = this.activeTriggerCls,
-           curIndex = this.curIndex;
-           if(triggers && triggers[curIndex]){
-             this.triggerSel && (this.triggerSel.className = '');
-             triggers[curIndex].className = cls;
-             this.triggerSel = triggers[curIndex];
-           }
-         },
-updateArrow : function(){  //左右箭头状态
-                var prev = this.prev,
-                next = this.next;
-                if(!prev || !prev.length || !next || !next.length) return;
-                if(this.loop) return;  //循环不需要隐藏
-                var cur = this.curIndex,
-                    cls = this.activePnCls;
-                cur <= 0 && prev.addClass(cls) || prev.removeClass(cls);
-                //console.log(cur,this._maxpage);
-                cur >= this._maxpage && next.addClass(cls) || next.removeClass(cls);
-              },
-begin : function(){
+            tmleft = initLeft - this.curIndex * this.steps + disX;
+            this.setCoord(this.panel , tmleft);
+            this._disX = disX;
+            //this._left = tmleft;
+          }
+        },
+        end : function(e){
+          if(!this._movestart){  //如果执行了move
+            var distance = this._disX;
+            if(distance < -10){
+              e.preventDefault();
+              this.forward();
+            } else if (distance > 10){
+              e.preventDefault();
+              this.backward();
+            }
+            distance = null;
+          }
+        },
+        backward : function(e){
+          if(e&&e.preventDefault){e.preventDefault()}
+          var cur = this.curIndex,
+              minp = this._minpage;
+              cur -= 1;
+          if(cur < minp){
+            if(!this.loop){cur = minp;}
+            else{cur = minp - 1;}
+          }
+          this.slideTo(cur);
+          this.callback && this.callback(Math.max(cur,minp),-1);
+        },
+        forward : function(e){
+          if(e&&e.preventDefault){e.preventDefault()}
+          var cur = this.curIndex,
+              maxp = this._maxpage;
+          cur += 1;
+          if(cur > maxp){
+            if(!this.loop){cur = maxp;}
+            else{cur = maxp + 1;}
+          }
+          this.slideTo(cur);
+          this.callback && this.callback(Math.min(cur,maxp),1);
+        },
+        setCoord : function(obj,x){
+          var transformValue = gv1 + x + 'px,0' + gv2;
+          this.useTransform && obj.css({"-webkit-transform": transformValue, "-moz-transform": transformValue, "transform": transformValue}) || obj.css("left",x);
+        },
+        slideTo : function(cur,duration){
+          cur = cur || 0;
+          this.curIndex = cur;  //保存当前屏数
+          var panel = this.panel,
+              style = panel[0].style,
+              scrollx = this.left - cur * this.steps;
+          style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = (duration || this.duration) + 'ms';
+          this.setCoord(panel,scrollx);
+          this.loadImg(cur);
+        },
+        transitionEnd : function(){
+          var panel = this.panel,
+              style = panel[0].style,
+              loop = this.loop,
+              cur = this.curIndex;
+          if(loop){  //把curIndex和坐标重置
+            if(cur > this._maxpage){
+              this.curIndex = 0;
+            }else if(cur < this._minpage){
+              this.curIndex = this._maxpage;
+            }
+            this.setCoord(panel,this.left - this.curIndex * this.steps);
+          }
+          if(!loop && cur == this._maxpage){  //不循环的，只播放一次
+            this.stop();
+            this.play = false;
+          } else{
+            this.begin();
+          }
+          this.update();
+          this.updateArrow();
+          style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = 0;
+          //this._isScroll = false;
+        },
+        update : function(){
+          var triggers = this.triggers,
+              cls = this.activeTriggerCls,
+              curIndex = this.curIndex;
+          if(triggers && triggers[curIndex]){
+            this.triggerSel && (this.triggerSel.className = '');
+            triggers[curIndex].className = cls;
+            this.triggerSel = triggers[curIndex];
+          }
+        },
+        updateArrow : function(){  //左右箭头状态
+          var prev = this.prev,
+          next = this.next;
+          if(!prev || !prev.length || !next || !next.length) return;
+          if(this.loop) return;  //循环不需要隐藏
+          var cur = this.curIndex,
+              cls = this.activePnCls;
+          cur <= 0 && prev.addClass(cls) || prev.removeClass(cls);
+          //console.log(cur,this._maxpage);
+          cur >= this._maxpage && next.addClass(cls) || next.removeClass(cls);
+        },
+        begin : function(){
           var that = this;
           if(that.play && !that._playTimer){  //自动播放
             that.stop();
             that._playTimer = setInterval(function(){
-                that.forward();
-                },that.interval);
+              that.forward();
+            },that.interval);
           }
         },
-stop : function(){
-         var that = this;
-         if(that.play && that._playTimer){
-           clearInterval(that._playTimer);
-           that._playTimer = null;
-         }
-       },
-destroy : function(){
-            var that = this,
-            _panel = that.wrap[0],
-            prev = that.prev,
-            next = that.next,
-            triggers = that.triggers;
-            if(_panel.removeEventListener){
-              _panel.removeEventListener('touchstart', that, false);
-              _panel.removeEventListener('touchmove', that, false);
-              _panel.removeEventListener('touchend', that, false);
-              _panel.removeEventListener('webkitTransitionEnd', that, false);
-              _panel.removeEventListener('msTransitionEnd', that, false);
-              _panel.removeEventListener('oTransitionEnd', that, false);
-              _panel.removeEventListener('transitionend', that, false);
-            }
-            if(prev && prev.length) prev.off('click');
-            if(next && next.length) next.off('click');
-            if(that.hasTrigger && triggers){
-              triggers.each(function(n,item){
-                  $(item).off('click');
-                  });
-            }
+        stop : function(){
+          var that = this;
+          if(that.play && that._playTimer){
+            clearInterval(that._playTimer);
+            that._playTimer = null;
           }
-});
-$.touchSlider.cache = [];
-$.fn.slider = function(options){
-  return this.each(function(n,item){
-      if(!item.getAttribute('l')){
-      item.setAttribute('l',true);
-      $.touchSlider.cache.push(new $.touchSlider(item,options));
-      }
+        },
+        destroy : function(){
+          var that = this,
+          _panel = that.wrap[0],
+          prev = that.prev,
+          next = that.next,
+          triggers = that.triggers;
+          if(_panel.removeEventListener){
+            _panel.removeEventListener('touchstart', that, false);
+            _panel.removeEventListener('touchmove', that, false);
+            _panel.removeEventListener('touchend', that, false);
+            _panel.removeEventListener('webkitTransitionEnd', that, false);
+            _panel.removeEventListener('msTransitionEnd', that, false);
+            _panel.removeEventListener('oTransitionEnd', that, false);
+            _panel.removeEventListener('transitionend', that, false);
+          }
+          if(prev && prev.length) prev.off('click');
+          if(next && next.length) next.off('click');
+          if(that.hasTrigger && triggers){
+            triggers.each(function(n,item){
+              $(item).off('click');
+            });
+          }
+        }
       });
-}
-$.touchSlider.destroy = function(){
-  var cache = $.touchSlider.cache,
-      len = cache.length;
-  if(len < 1){return;}
-  for(var i=0;i<len;i++){
-    cache[i].destroy();
-  }
-  $.touchSlider.cache = [];
-}
-//return $.touchSlider;
-window.slider =  $.touchSlider;
+      $.touchSlider.cache = [];
+      $.fn.slider = function(options){
+        return this.each(function(n,item){
+          if(!item.getAttribute('l')){
+            item.setAttribute('l',true);
+            $.touchSlider.cache.push(new $.touchSlider(item,options));
+          }
+        });
+      };
+      $.touchSlider.destroy = function(){
+        var cache = $.touchSlider.cache,
+            len = cache.length;
+        if(len < 1){return;}
+        for(var i=0;i<len;i++){
+          cache[i].destroy();
+        }
+        $.touchSlider.cache = [];
+      }
+      //return $.touchSlider;
+      window.slider =  $.touchSlider;
 }(Zepto, css3));
