@@ -52,7 +52,7 @@
       };
 
       $.extend($.touchSlider.prototype,{
-          reset : function(options){
+        reset : function(options){
           $.extend(this,options || {});
           this.init();
         },
@@ -68,8 +68,8 @@
 
           this.panels = this.panel.children();
           if(!this.panels.length){  //对于没有图片的元素，直接隐藏
-          this.container.hide();
-          return null;
+            this.container.hide();
+            return null;
           }
 
           this.trigger = this.trigger && container.find(this.trigger);
@@ -77,108 +77,102 @@
           this.next = this.next && container.find(this.next);
           return this;
         },
-init : function(){
-         var wrap = this.wrap,
-         panel = this.panel,
-         panels = this.panels,
-         trigger = this.trigger,
-         len = this.len = panels.length,  //子元素的个数
-         margin = this.margin,
-         allWidth = 0,  //滑动容器的宽度
-         status = this.visible,  //每次切换多少个panels
-         useTransform = this.useTransform = hasTransform ? this.useTransform : false;  //不支持直接false,android默认false
+        init : function(){
+          var wrap = this.wrap,
+              panel = this.panel,
+              panels = this.panels,
+              trigger = this.trigger,
+              len = this.len = panels.length,  //子元素的个数
+              margin = this.margin,
+              allWidth = 0,  //滑动容器的宽度
+              status = this.visible,  //每次切换多少个panels
+              useTransform = this.useTransform = hasTransform ? this.useTransform : false;  //不支持直接false,android默认false
 
-         this.steps = this.steps || wrap.width();  //滑动步长，默认wrap的宽度
-         panels.each(function(n,item){
-             allWidth += item.offsetWidth;
-             });
+          this.steps = this.steps || wrap.width();  //滑动步长，默认wrap的宽度
+          panels.each(function(n,item){
+            allWidth += item.offsetWidth;
+          });
 
-         if(margin && typeof margin == 'number'){
-           allWidth += (len-1) * margin;  //总宽度增加
-           this.steps += margin;  //步长增加margin
-         }
+          if(margin && typeof margin == 'number'){
+            allWidth += (len-1) * margin;  //总宽度增加
+            this.steps += margin;  //步长增加margin
+          }
 
-         if(status > 1){this.loop = false;}  //如果一页显示的子元素超出1个，或设置了步长，则不支持循环；若自动播放，则只支持一次
+          if(status > 1){this.loop = false;}  //如果一页显示的子元素超出1个，或设置了步长，则不支持循环；若自动播放，则只支持一次
 
-         //初始位置
-         var initLeft = this.left;
-         initLeft -= this.curIndex * this.steps;
-         this.setCoord(panel,initLeft);
-         if(useTransform){
-           //        wrap.css({'-webkit-transform':'translate3d(0,0,0)'});  //防止ios6下滑动会有顿感
-           //        panel.css({'-webkit-backface-visibility':'hidden'});
-           //        panels.css({'-webkit-transform':gv1+'0,0'+gv2});
-         }
+          //初始位置
+          var initLeft = this.left;
+          initLeft -= this.curIndex * this.steps;
+          this.setCoord(panel,initLeft);
 
-         var pages = this._pages = Math.ceil(len/status);  //总页数
-         //初始坐标参数
-         this._minpage = 0;  //最小页
-         this._maxpage = this._pages == 1 ? 1 : this._pages - 1;  //最大页
+          var pages = this._pages = Math.ceil(len/status);  //总页数
+          //初始坐标参数
+          this._minpage = 0;  //最小页
+          this._maxpage = this._pages == 1 ? 1 : this._pages - 1;  //最大页
 
-         this.loadImg(this.curIndex);    //add this.curIndex 初始加载第几屏 zoulingling
-         this.updateArrow();
-         if(pages <= 1){ //如果没超出一页，则不需要滑动
-           trigger && trigger.hide();
-           return null;
-         }
+          this.loadImg(this.curIndex);    //add this.curIndex 初始加载第几屏 zoulingling
+          this.updateArrow();
+          if(pages <= 1){ //如果没超出一页，则不需要滑动
+            trigger && trigger.hide();
+            return null;
+          }
 
-         if(this.loop){  //复制首尾以便循环
-           panel.append(panels[0].cloneNode(true));
-           var lastp = panels[len-1].cloneNode(true);
-           panel.append(lastp);
-           this.getImg(lastp);
-           lastp.style.cssText += 'position:relative;left:'+(-this.steps*(len+2))+'px;';
-           allWidth += panels[0].offsetWidth;
-           allWidth += panels[len-1].offsetWidth;
-         }
-         panel.css('width',allWidth);
-         if(trigger && trigger.length){  //如果触发容器存在，触发容器无子元素则添加子元素
-           var temp='',
-               childstu = trigger.children();
-           if(!childstu.length){
-             for(var i=0;i<pages;i++){
-               temp += '<span'+(i == this.curIndex ? " class="+ this.activeTriggerCls +"" : "")+'></span>';
-             }
-             trigger.html(temp);
-           }
-           this.triggers = trigger.children();
-           this.triggerSel = this.triggers[this.curIndex];  //当前状态元素
-         }
-         else{
-           this.hasTrigger = false;
-         }
-         return this;
-       },
-increaseEvent : function(){
-                  var that = this,
-                  _panel = that.wrap[0],  //外层容器
-                  prev = that.prev,
-                  next = that.next,
-                  triggers = that.triggers;
-                  if(_panel.addEventListener){
-                    _panel.addEventListener('touchstart', that, false);
-                    _panel.addEventListener('touchmove', that, false);
-                    _panel.addEventListener('touchend', that, false);
-                    _panel.addEventListener('webkitTransitionEnd', that, false);
-                    _panel.addEventListener('msTransitionEnd', that, false);
-                    _panel.addEventListener('oTransitionEnd', that, false);
-                    _panel.addEventListener('transitionend', that, false);
-                  }
-                  if(that.play){that.begin();}
-                  if(prev && prev.length){
-                    prev.on('click',function(e){that.backward.call(that,e)});
-                  }
-                  if(next && next.length){
-                    next.on('click',function(e){that.forward.call(that,e)});
-                  }
-                  if(that.hasTrigger && triggers){
-                    triggers.each(function(n,item){
-                        $(item).on('click',function(){
-                          that.slideTo(n);
-                          });
-                        });
-                  }
-                },
+          if(this.loop){  //复制首尾以便循环
+            panel.append(panels[0].cloneNode(true));
+            var lastp = panels[len-1].cloneNode(true);
+            panel.append(lastp);
+            this.getImg(lastp);
+            lastp.style.cssText += 'position:relative;left:'+(-this.steps*(len+2))+'px;';
+            allWidth += panels[0].offsetWidth;
+            allWidth += panels[len-1].offsetWidth;
+          }
+          panel.css('width',allWidth);
+          if(trigger && trigger.length){  //如果触发容器存在，触发容器无子元素则添加子元素
+            var temp='',
+            childstu = trigger.children();
+            if(!childstu.length){
+              for(var i=0;i<pages;i++){
+                temp += '<span'+(i == this.curIndex ? " class="+ this.activeTriggerCls +"" : "")+'></span>';
+              }
+              trigger.html(temp);
+            }
+            this.triggers = trigger.children();
+            this.triggerSel = this.triggers[this.curIndex];  //当前状态元素
+          } else {
+            this.hasTrigger = false;
+          }
+          return this;
+        },
+        increaseEvent : function(){
+          var that = this,
+          _panel = that.wrap[0],  //外层容器
+          prev = that.prev,
+          next = that.next,
+          triggers = that.triggers;
+          if(_panel.addEventListener){
+            _panel.addEventListener('touchstart', that, false);
+            _panel.addEventListener('touchmove', that, false);
+            _panel.addEventListener('touchend', that, false);
+            _panel.addEventListener('webkitTransitionEnd', that, false);
+            _panel.addEventListener('msTransitionEnd', that, false);
+            _panel.addEventListener('oTransitionEnd', that, false);
+            _panel.addEventListener('transitionend', that, false);
+          }
+          if(that.play){that.begin();}
+          if(prev && prev.length){
+            prev.on('click',function(e){that.backward.call(that,e)});
+          }
+          if(next && next.length){
+            next.on('click',function(e){that.forward.call(that,e)});
+          }
+          if(that.hasTrigger && triggers){
+            triggers.each(function(n,item){
+              $(item).on('click',function(){
+                that.slideTo(n);
+              });
+            });
+          }
+        },
 handleEvent : function(e){
                 switch(e.type){
                   case 'touchstart':
