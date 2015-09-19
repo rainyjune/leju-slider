@@ -37,12 +37,10 @@
           margin : 0,  //面板元素内子元素间的间距
           curIndex : 0,  //初始化在哪个panels上，默认0为第一个
           duration : 300,  //动画持续时间
-          //easing : 'ease-out', //动画公式
           loop : false,  //动画循环
           play : false,  //动画自动播放
           interval : 5000,  //播放间隔时间，play为true时才有效
           useTransform : !isAndroid, //以translate方式动画
-
           lazy : '.lazyimg', //图片延时加载属性
           lazyIndex : 1,  //默认加载到第几屏
           callback : null, //动画结束后触发pageLeft
