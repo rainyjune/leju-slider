@@ -173,6 +173,15 @@
             });
           }
         },
+        /**
+         * This is a special function, maybe some of you never used it before!
+         * We define a function called handleEvent as a method of an object, 
+         * and then pass the object as the second argument of addEventListener function.
+         * This function wil catch any events. This works in nearly all modern browsers.
+         * For more: 
+         * 1. https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#The_value_of_this_within_the_handler
+         * 2. http://www.thecssninja.com/javascript/handleevent
+         */
         handleEvent : function(e){
           switch(e.type){
             case 'touchstart':
