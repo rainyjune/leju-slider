@@ -5,70 +5,80 @@
  * 支持translate3d
  */
 (function($, css3){
-    isAndroid = (/android/gi).test(navigator.appVersion),
-    has3d = css3.has3d(),
-    hasTransform = css3.hasTransform(),
+  // 判断当前浏览器是否为运行在 Android 上的浏览器，
+  // 注意这样做并不安全，因为在部分基于 Android 的设备上，其内置浏览器的 navigator.appVersion 和 navigator.userAgent 中不含有 android 字样。
+  // 例如 Kindle Fire, Silk模式下其 userAgent 可能为 
+  // Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-us; Silk/1.1.0-80) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16 Silk-Accelerated=true
+  // For more: https://amazonsilk.wordpress.com/useful-bits/silk-user-agent/
+  var isAndroid = (/android/gi).test(navigator.appVersion),
+      has3d = css3.has3d(),
+      hasTransform = css3.hasTransform(),
+      gv1 = has3d ? 'translate3d(' : 'translate(',
+      gv2 = has3d ? ',0)' : ')';
 
-    gv1 = has3d ? 'translate3d(' : 'translate(',
-        gv2 = has3d ? ',0)' : ')';
+      // Why put the touchSlider variable into Zepto namespace?
       $.touchSlider = function(container,options){
-      if(!container) return null;
-      if(options) options.container = container; //container会覆盖options内的container
-      else options = typeof container == 'string' ? {'container' : container} : container;
-      $.extend(this,{
-container : ".slider",  //大容器，包含面板元素、触发元素、上下页等
-wrap : null,  //滑动显示区域，默认为container的第一个子元素。（该元素固定宽高overflow为hidden，否则无法滑动）
-panel : null,  //面板元素，默认为wrap的第一个子元素
-trigger : null,   //触发元素，也可理解为状态元素
-activeTriggerCls : 'sel',  //触发元素内子元素的激活样式
-hasTrigger : false,  //是否需要触发事件，例tab页签就需要click触发
-steps : 0,  //步长，每次滑动的距离
-left : 0,  //panel初始的x坐标
-visible : 1,  //每次滑动几个panels，默认1
-margin : 0,  //面板元素内子元素间的间距
-curIndex : 0,  //初始化在哪个panels上，默认0为第一个
-duration : 300,  //动画持续时间
-//easing : 'ease-out', //动画公式
-loop : false,  //动画循环
-play : false,  //动画自动播放
-interval : 5000,  //播放间隔时间，play为true时才有效
-useTransform : !isAndroid, //以translate方式动画
+        if(!container) return null;
+        if(options) {
+          options.container = container; //container会覆盖options内的container
+        } else {
+          options = (typeof container === 'string') ? {'container' : container} : container;
+        }
+        $.extend(this,{
+          container : ".slider",  //大容器，包含面板元素、触发元素、上下页等
+          wrap : null,  //滑动显示区域，默认为container的第一个子元素。（该元素固定宽高overflow为hidden，否则无法滑动）
+          panel : null,  //面板元素，默认为wrap的第一个子元素
+          trigger : null,   //触发元素，也可理解为状态元素
+          activeTriggerCls : 'sel',  //触发元素内子元素的激活样式
+          hasTrigger : false,  //是否需要触发事件，例tab页签就需要click触发
+          steps : 0,  //步长，每次滑动的距离
+          left : 0,  //panel初始的x坐标
+          visible : 1,  //每次滑动几个panels，默认1
+          margin : 0,  //面板元素内子元素间的间距
+          curIndex : 0,  //初始化在哪个panels上，默认0为第一个
+          duration : 300,  //动画持续时间
+          //easing : 'ease-out', //动画公式
+          loop : false,  //动画循环
+          play : false,  //动画自动播放
+          interval : 5000,  //播放间隔时间，play为true时才有效
+          useTransform : !isAndroid, //以translate方式动画
 
-lazy : '.lazyimg', //图片延时加载属性
-lazyIndex : 1,  //默认加载到第几屏
-callback : null, //动画结束后触发pageLeft
-prev : null,  //上一页
-next : null,  //下一页
-activePnCls : 'none'  //prev和next在头尾时的样式
-      },options);
-      this.findEl() && this.init() && this.increaseEvent();
-      }
+          lazy : '.lazyimg', //图片延时加载属性
+          lazyIndex : 1,  //默认加载到第几屏
+          callback : null, //动画结束后触发pageLeft
+          prev : null,  //上一页
+          next : null,  //下一页
+          activePnCls : 'none'  //prev和next在头尾时的样式
+        },options);
+        this.findEl() && this.init() && this.increaseEvent();
+      };
+
       $.extend($.touchSlider.prototype,{
-reset : function(options){
-$.extend(this,options || {});
-this.init();
-},
-findEl : function(){
-var container = this.container = $(this.container);
-if(!container.length){return null;}
+          reset : function(options){
+          $.extend(this,options || {});
+          this.init();
+        },
+        findEl : function(){
+          var container = this.container = $(this.container);
+          if(!container.length){return null;}
 
-this.wrap = this.wrap && container.find(this.wrap) || container.children().first();
-if(!this.wrap.length){return null;}
+          this.wrap = this.wrap && container.find(this.wrap) || container.children().first();
+          if(!this.wrap.length){return null;}
 
-this.panel = this.panel && container.find(this.panel) || this.wrap.children().first();
-if(!this.panel.length){return null;}
+          this.panel = this.panel && container.find(this.panel) || this.wrap.children().first();
+          if(!this.panel.length){return null;}
 
-this.panels = this.panel.children();
-if(!this.panels.length){  //对于没有图片的元素，直接隐藏
-this.container.hide();
-return null;
-}
+          this.panels = this.panel.children();
+          if(!this.panels.length){  //对于没有图片的元素，直接隐藏
+          this.container.hide();
+          return null;
+          }
 
-this.trigger = this.trigger && container.find(this.trigger);
-this.prev = this.prev && container.find(this.prev);
-this.next = this.next && container.find(this.next);
-return this;
-},
+          this.trigger = this.trigger && container.find(this.trigger);
+          this.prev = this.prev && container.find(this.prev);
+          this.next = this.next && container.find(this.next);
+          return this;
+        },
 init : function(){
          var wrap = this.wrap,
          panel = this.panel,
