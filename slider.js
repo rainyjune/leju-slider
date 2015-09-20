@@ -377,6 +377,10 @@
             that._playTimer = null;
           }
         },
+        /**
+         * Releases resources held by this slider. Call this method after the slider is no longer needed.
+         *
+         */
         destroy : function(){
           var that = this,
           _panel = that.wrap[0],
